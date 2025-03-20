@@ -39,6 +39,11 @@
             <button type="button" id="add-subject" class="btn btn-secondary">Adicionar Matéria</button>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Nota Total da Prova</label>
+            <input type="number" step="0.1" class="form-control" name="total_score" placeholder="Ex: 10" required>
+        </div>
+
         <div id="gabarito-container" class="mb-3 d-none">
             <h3>Gabarito da Prova</h3>
             <div id="gabarito-list"></div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Exam;
 use App\Models\ExamSubject;
+use App\Models\StudentAnswer;
 use App\Models\ExamAnswer;
 
 class ExamController extends Controller {
@@ -17,10 +18,30 @@ class ExamController extends Controller {
         return view('exams.create');
     }
 
+    public function destroy($id) {
+        $exam = Exam::findOrFail($id);
+    
+        // Excluir matérias relacionadas
+        ExamSubject::where('exam_id', $id)->delete();
+    
+        // Excluir gabarito da prova
+        ExamAnswer::where('exam_id', $id)->delete();
+    
+        // Excluir respostas dos alunos
+        StudentAnswer::where('exam_id', $id)->delete();
+    
+        // Excluir a prova
+        $exam->delete();
+    
+        return redirect()->route('exams.index')->with('success', 'Prova excluída com sucesso.');
+    }
+    
+
     public function store(Request $request) {
         $exam = Exam::create([
             'name' => $request->name,
-            'has_multiple_subjects' => $request->has_multiple_subjects ? true : false
+            'has_multiple_subjects' => $request->has_multiple_subjects ? true : false,
+            'total_score' => $request->total_score
         ]);
     
         $totalQuestions = 0;

@@ -39,16 +39,21 @@ class StudentAnswerController extends Controller {
 
     public function results($exam_id) {
         $exam = Exam::findOrFail($exam_id);
+        $totalScore = $exam->total_score; // Nota total da prova
+    
+        // Recuperar todas as respostas corretas (gabarito)
+        $correctAnswers = ExamAnswer::where('exam_id', $exam_id)->get();
+        $totalQuestions = $correctAnswers->count();
+        $subjects = ExamSubject::where('exam_id', $exam_id)->get();
+        $hasMultipleSubjects = $exam->has_multiple_subjects;
+    
+        // Nota por questão
+        $pointsPerQuestion = $totalQuestions > 0 ? $totalScore / $totalQuestions : 0;
     
         $students = StudentAnswer::select('student_name')
             ->where('exam_id', $exam_id)
             ->groupBy('student_name')
             ->get();
-    
-        $correctAnswers = ExamAnswer::where('exam_id', $exam_id)->get();
-        $totalQuestions = $correctAnswers->count();
-        $subjects = ExamSubject::where('exam_id', $exam_id)->get();
-        $hasMultipleSubjects = $exam->has_multiple_subjects;
     
         $results = [];
     
@@ -59,6 +64,7 @@ class StudentAnswerController extends Controller {
     
             $score = 0;
             $subjectScores = [];
+            $subjectPoints = [];
     
             foreach ($studentAnswers as $studentAnswer) {
                 $correct = $correctAnswers->where('question_number', $studentAnswer->question_number)->first();
@@ -69,8 +75,10 @@ class StudentAnswerController extends Controller {
                         $subjectId = $correct->subject_id;
                         if (!isset($subjectScores[$subjectId])) {
                             $subjectScores[$subjectId] = 0;
+                            $subjectPoints[$subjectId] = 0;
                         }
                         $subjectScores[$subjectId]++;
+                        $subjectPoints[$subjectId] += $pointsPerQuestion;
                     }
                 }
             }
@@ -78,7 +86,10 @@ class StudentAnswerController extends Controller {
             $subjectResults = [];
             if ($hasMultipleSubjects) {
                 foreach ($subjects as $subject) {
-                    $subjectResults[$subject->subject_name] = $subjectScores[$subject->id] ?? 0;
+                    $subjectResults[$subject->subject_name] = [
+                        'acertos' => $subjectScores[$subject->id] ?? 0,
+                        'nota' => number_format($subjectPoints[$subject->id] ?? 0, 2)
+                    ];
                 }
             }
     
@@ -86,10 +97,11 @@ class StudentAnswerController extends Controller {
                 'student_name' => $student->student_name,
                 'score' => $score,
                 'total' => $totalQuestions,
+                'nota_final' => number_format($score * $pointsPerQuestion, 2),
                 'subject_results' => $subjectResults
             ];
         }
     
         return view('student_answers.results', compact('exam', 'results', 'hasMultipleSubjects'));
-    }      
+    }    
 }

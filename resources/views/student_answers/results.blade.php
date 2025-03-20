@@ -12,9 +12,9 @@
                 <th>Nome do Aluno</th>
                 <th>Acertos</th>
                 <th>Total de Questões</th>
-                <th>Porcentagem</th>
+                <th>Nota Final</th>
                 @if ($hasMultipleSubjects)
-                    <th>Acertos por Matéria</th>
+                    <th>Notas por Matéria</th>
                 @endif
             </tr>
         </thead>
@@ -24,17 +24,12 @@
                     <td>{{ $result['student_name'] }}</td>
                     <td>{{ $result['score'] }}</td>
                     <td>{{ $result['total'] }}</td>
-                    <td>
-                        @if ($result['total'] > 0)
-                            {{ round(($result['score'] / $result['total']) * 100, 2) }}%
-                        @else
-                            N/A
-                        @endif
-                    </td>
+                    <td>{{ $result['nota_final'] }}</td>
                     @if ($hasMultipleSubjects)
                         <td>
-                            @foreach ($result['subject_results'] as $subject => $score)
-                                <strong>{{ $subject }}:</strong> {{ $score }} acertos<br>
+                            @foreach ($result['subject_results'] as $subject => $data)
+                                <strong>{{ $subject }}:</strong> 
+                                {{ $data['acertos'] }} acertos - Nota: {{ $data['nota'] }}<br>
                             @endforeach
                         </td>
                     @endif
